@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ひらがなマッチ - Hiragana Memory Game</title>
+    <title>ひらがなマッチ - 楽しい日本語学習ゲーム | Hiragana</title>
+    <meta name="description" content="ひらがなの学習に最適な無料メモリゲーム。レベル1（あいうえお）、レベル2（か行）、レベル3（混合）で段階的に学習できます。ハイスコア記録機能付き。">
+    <meta name="keywords" content="ひらがな,学習,メモリゲーム,神経衰弱,日本語教育,子ども向け,無料ゲーム">
+    <meta property="og:title" content="ひらがなマッチ - 楽しい学習ゲーム">
+    <meta property="og:description" content="レベル別のひらがな学習メモリゲーム。楽しく日本語を学べます。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://robo-co-op.github.io/puzzle-games/games/hiragana-match/">
+    <!-- ADSENSE_HEAD_CODE_HERE -->
     <style>
         * {
             margin: 0;
@@ -287,8 +294,8 @@
                 <div class="stat-value" id="score">0</div>
             </div>
             <div class="stat-item">
-                <div class="stat-label">時間</div>
-                <div class="timer" id="timer">0:00</div>
+                <div class="stat-label">ベストタイム</div>
+                <div class="timer" id="bestTime">--:--</div>
             </div>
             <div class="stat-item">
                 <div class="stat-label">ペア</div>
@@ -305,9 +312,9 @@
             <button class="btn-reset">リセット</button>
         </div>
 
+        <!-- ADSENSE_BANNER_HERE -->
         <div class="adsense-placeholder">
             <!-- AdSense広告コード: 336x280 を挿入してください -->
-            <!-- AdSense Ad Unit Code Here -->
         </div>
     </div>
 
@@ -352,11 +359,47 @@
                 this.startTime = Date.now();
                 this.timerInterval = null;
                 this.canFlip = true;
+                this.bestTimes = this.loadBestTimes();
 
                 this.init();
             }
 
+            loadBestTimes() {
+                const saved = localStorage.getItem('hiraganaMatchBestTimes');
+                return saved ? JSON.parse(saved) : { 1: null, 2: null, 3: null };
+            }
+
+            saveBestTimes() {
+                localStorage.setItem('hiraganaMatchBestTimes', JSON.stringify(this.bestTimes));
+            }
+
+            saveBestTime(level, seconds) {
+                if (!this.bestTimes[level] || seconds < this.bestTimes[level]) {
+                    this.bestTimes[level] = seconds;
+                    this.saveBestTimes();
+                    return true;
+                }
+                return false;
+            }
+
+            formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            updateBestTimeDisplay() {
+                const best = this.bestTimes[this.currentLevel];
+                const bestTimeEl = document.getElementById('bestTime');
+                if (best !== null) {
+                    bestTimeEl.textContent = this.formatTime(best);
+                } else {
+                    bestTimeEl.textContent = '--:--';
+                }
+            }
+
             init() {
+                this.updateBestTimeDisplay();
                 this.newGame();
                 this.attachEventListeners();
             }
@@ -478,10 +521,15 @@
             win() {
                 clearInterval(this.timerInterval);
                 const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-                const minutes = Math.floor(elapsed / 60);
-                const seconds = elapsed % 60;
-                const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                this.showMessage(`完成！スコア: ${this.score} (時間: ${timeStr})`, 'success');
+                const isNewRecord = this.saveBestTime(this.currentLevel, elapsed);
+                this.updateBestTimeDisplay();
+
+                const timeStr = this.formatTime(elapsed);
+                let message = `完成！スコア: ${this.score} (時間: ${timeStr})`;
+                if (isNewRecord) {
+                    message += '\n新記録！';
+                }
+                this.showMessage(message, 'success');
             }
 
             newGame() {
@@ -493,6 +541,7 @@
                 this.createCards();
                 this.renderCards();
                 this.updateStats();
+                this.updateBestTimeDisplay();
                 this.startTimer();
             }
 

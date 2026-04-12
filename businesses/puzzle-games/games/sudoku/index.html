@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数独パズル - Sudoku Game</title>
+    <title>数独パズル - 難易度選択で脳トレゲーム | Sudoku</title>
+    <meta name="description" content="日本語対応の無料数独パズルゲーム。かんたん、ふつう、むずかしい3段階の難易度で遊べます。ハイスコア記録機能付き。">
+    <meta name="keywords" content="数独,Sudoku,ナンバープレイス,パズルゲーム,脳トレ,難易度選択">
+    <meta property="og:title" content="数独パズル - 難易度選択で遊べる">
+    <meta property="og:description" content="日本語対応の無料数独パズルゲーム。ハイスコア記録付き。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://robo-co-op.github.io/puzzle-games/games/sudoku/">
+    <!-- ADSENSE_HEAD_CODE_HERE -->
     <style>
         * {
             margin: 0;
@@ -356,6 +363,10 @@
                 <div class="stat-label">エラー</div>
                 <div class="stat-value" id="errors">0</div>
             </div>
+            <div class="stat-item">
+                <div class="stat-label">ベストタイム</div>
+                <div class="stat-value" id="bestTime">--:--</div>
+            </div>
         </div>
 
         <div class="sudoku-board">
@@ -381,9 +392,9 @@
             <button class="btn-solve">解答</button>
         </div>
 
+        <!-- ADSENSE_BANNER_HERE -->
         <div class="adsense-placeholder">
             <!-- AdSense広告コード: 336x280 を挿入してください -->
-            <!-- AdSense Ad Unit Code Here -->
         </div>
     </div>
 
@@ -398,12 +409,48 @@
                 this.errors = 0;
                 this.startTime = Date.now();
                 this.timerInterval = null;
+                this.bestTimes = this.loadBestTimes();
                 this.init();
+            }
+
+            loadBestTimes() {
+                const saved = localStorage.getItem('sudokuBestTimes');
+                return saved ? JSON.parse(saved) : { easy: null, medium: null, hard: null };
+            }
+
+            saveBestTimes() {
+                localStorage.setItem('sudokuBestTimes', JSON.stringify(this.bestTimes));
+            }
+
+            saveBestTime(difficulty, seconds) {
+                if (!this.bestTimes[difficulty] || seconds < this.bestTimes[difficulty]) {
+                    this.bestTimes[difficulty] = seconds;
+                    this.saveBestTimes();
+                    return true;
+                }
+                return false;
+            }
+
+            formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            updateBestTimeDisplay() {
+                const best = this.bestTimes[this.difficulty];
+                const bestTimeEl = document.getElementById('bestTime');
+                if (best !== null) {
+                    bestTimeEl.textContent = this.formatTime(best);
+                } else {
+                    bestTimeEl.textContent = '--:--';
+                }
             }
 
             init() {
                 this.generatePuzzle();
                 this.renderBoard();
+                this.updateBestTimeDisplay();
                 this.attachEventListeners();
                 this.startTimer();
             }
@@ -420,10 +467,11 @@
                 this.board = [...this.solution];
 
                 // Remove numbers based on difficulty
+                // かんたん: 50個埋める = 31個削除, ふつう: 35個埋める = 46個削除, むずかしい: 25個埋める = 56個削除
                 const cellsToRemove = {
-                    easy: 40,
-                    medium: 50,
-                    hard: 60
+                    easy: 31,
+                    medium: 46,
+                    hard: 56
                 };
 
                 let removed = 0;
@@ -587,7 +635,15 @@
             checkWin() {
                 if (this.board.every((cell, idx) => cell === this.solution[idx])) {
                     clearInterval(this.timerInterval);
-                    this.showMessage('おめでとうございます！完成しました！', 'success');
+                    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                    const isNewRecord = this.saveBestTime(this.difficulty, elapsed);
+                    this.updateBestTimeDisplay();
+
+                    let message = 'おめでとうございます！完成しました！';
+                    if (isNewRecord) {
+                        message += '\n新記録: ' + this.formatTime(elapsed);
+                    }
+                    this.showMessage(message, 'success');
                 }
             }
 
@@ -624,6 +680,7 @@
                 this.selectedCell = null;
                 this.generatePuzzle();
                 this.renderBoard();
+                this.updateBestTimeDisplay();
                 this.startTimer();
             }
         }
