@@ -50,9 +50,10 @@ $500/month runs 3 businesses in parallel.
 
 | Role | Model | ~Cost |
 |------|-------|-------|
-| CEO | Opus | $50/mo |
-| CXOs | Sonnet | $250/mo |
-| Research | Haiku | $100/mo |
+| Coordinator (main) | Sonnet | $150/mo |
+| CEO (strategy) | Opus | $30/mo |
+| CXOs (execution) | Sonnet | $200/mo |
+| Research | Haiku | $70/mo |
 
 ## Manual setup
 
