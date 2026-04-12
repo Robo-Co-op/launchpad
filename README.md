@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Launchpad
 
-## Getting Started
+AI CXO team that runs 3 digital businesses for you. Just talk.
 
-First, run the development server:
+## Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bash <(curl -sL https://raw.githubusercontent.com/Robo-Co-op/launchpad/main/start.sh)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+That's it. Claude Code opens and asks what languages you speak.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What happens
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. You tell the AI your languages and region
+2. CEO (AI) picks 3 businesses optimized for your strengths
+3. CTO, CMO, COO, CFO agents build and run them
+4. You check in when you want
 
-## Learn More
+## Businesses (all $0 to start)
 
-To learn more about Next.js, take a look at the following resources:
+| Type | What | Revenue |
+|------|------|---------|
+| Affiliate/SEO | Multi-language review sites | Affiliate commissions |
+| Digital Products | Templates, ebooks on Gumroad | Direct sales |
+| Games + Ads | HTML5 games with AdSense | Ad revenue |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Requirements
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [Claude Code](https://claude.ai/download) (`npm i -g @anthropic-ai/claude-code`)
+- Anthropic API key ([console.anthropic.com](https://console.anthropic.com/))
 
-## Deploy on Vercel
+## How it works
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Launchpad is a Claude Code configuration. Open Claude Code in this directory → it becomes your CEO → manages CTO/CMO/COO/CFO agents → they build businesses.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+You: "I speak Arabic and English, I'm in the Middle East"
+CEO: "Here are 3 businesses I recommend..."
+You: "Let's go"
+CEO: → delegates to CTO, CMO, COO, CFO → they start building
+```
+
+## Budget
+
+$500/month runs 3 businesses in parallel.
+
+| Role | Model | ~Cost |
+|------|-------|-------|
+| CEO | Opus | $50/mo |
+| CXOs | Sonnet | $250/mo |
+| Research | Haiku | $100/mo |
+
+## Manual setup
+
+```bash
+git clone https://github.com/Robo-Co-op/launchpad.git my-startup
+cd my-startup
+claude
+```
+
+## License
+
+MIT
