@@ -5,49 +5,55 @@
 set -e
 
 echo ""
-echo "  🚀 Launchpad — AI CXOマルチエージェント起業"
+echo "  🚀 Launchpad — AI CXO Startup Platform"
 echo "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 # Claude Code チェック
 if ! command -v claude &> /dev/null; then
-  echo "  Claude Code が必要です。インストール:"
+  echo "  Claude Code is required. Install:"
   echo "  npm install -g @anthropic-ai/claude-code"
   echo ""
-  read -p "  今インストールしますか？ (y/n): " install_cc
+  read -p "  Install now? (y/n): " install_cc
   if [[ "$install_cc" == "y" || "$install_cc" == "Y" ]]; then
     npm install -g @anthropic-ai/claude-code
   else
-    echo "  Claude Code をインストールしてから再実行してください。"
+    echo "  Please install Claude Code and try again."
     exit 1
   fi
 fi
 
-# 会社名
+# 名前を聞く
 echo ""
-read -p "  会社名 (英語、スペースなし): " company_name
-company_name=${company_name:-my-startup}
+read -p "  How should I call you? " user_name
+user_name=${user_name:-friend}
+
+# ディレクトリ名はlaunchpadで固定
+dir_name="launchpad"
 
 # クローン
-if [ -d "$company_name" ]; then
-  echo "  $company_name は既に存在します。そのディレクトリに入ります。"
+if [ -d "$dir_name" ]; then
+  echo "  launchpad/ already exists. Entering that directory."
 else
-  echo "  Launchpad をセットアップ中..."
-  git clone --depth 1 https://github.com/Robo-Co-op/launchpad.git "$company_name" 2>/dev/null
-  rm -rf "$company_name/.git"
-  cd "$company_name"
+  echo "  Setting up Launchpad..."
+  git clone --depth 1 https://github.com/Robo-Co-op/launchpad.git "$dir_name" 2>/dev/null
+  rm -rf "$dir_name/.git"
+  cd "$dir_name"
   git init -q
   git add -A
-  git commit -q -m "Launchpad 初期セットアップ"
+  git commit -q -m "Launchpad initial setup"
 fi
 
-cd "$company_name" 2>/dev/null || true
+cd "$dir_name" 2>/dev/null || true
+
+# ユーザー名を保存（CLAUDE.mdから参照）
+echo "$user_name" > .user_name
 
 echo ""
-echo "  ✅ セットアップ完了！"
+echo "  ✅ Welcome, $user_name!"
 echo ""
-echo "  Claude Code を起動します。"
-echo "  自然言語で話すだけで、AI CXOチームがビジネスを始めます。"
+echo "  Starting Claude Code..."
+echo "  Just talk in your language. The AI CXO team will build your businesses."
 echo ""
 echo "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

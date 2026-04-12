@@ -12,7 +12,7 @@ That's it. Claude Code opens and asks what languages you speak.
 
 ## What happens
 
-1. You tell the AI your languages and region
+1. AI asks your name, languages, and country
 2. CEO (AI) picks 3 businesses optimized for your strengths
 3. CTO, CMO, COO, CFO agents build and run them
 4. You check in when you want
@@ -35,10 +35,13 @@ That's it. Claude Code opens and asks what languages you speak.
 Launchpad is a Claude Code configuration. Open Claude Code in this directory → it becomes your CEO → manages CTO/CMO/COO/CFO agents → they build businesses.
 
 ```
-You: "I speak Arabic and English, I'm in the Middle East"
-CEO: "Here are 3 businesses I recommend..."
+AI: "How should I call you?"
+You: "Ahmed"
+AI: "Hi Ahmed! Which languages do you speak?" → you pick from list
+AI: "Where do you live?" → you pick from list
+AI: "Here are 3 businesses I recommend..."
 You: "Let's go"
-CEO: → delegates to CTO, CMO, COO, CFO → they start building
+AI: → delegates to CTO, CMO, COO, CFO → they start building
 ```
 
 ## Budget
