@@ -17,11 +17,11 @@ export const CXO_COLORS: Record<CXORole, string> = {
 }
 
 export const CXO_MODELS = {
-  ceo: 'claude-sonnet-4-6',
-  cto: 'claude-haiku-4-5-20251001',
-  cmo: 'claude-haiku-4-5-20251001',
-  coo: 'claude-haiku-4-5-20251001',
-  cfo: 'claude-haiku-4-5-20251001',
+  ceo: 'claude-opus-4-6',
+  cto: 'claude-sonnet-4-6',
+  cmo: 'claude-sonnet-4-6',
+  coo: 'claude-sonnet-4-6',
+  cfo: 'claude-sonnet-4-6',
 } as const
 
 export const CXO_SYSTEM_PROMPTS: Record<CXORole, string> = {

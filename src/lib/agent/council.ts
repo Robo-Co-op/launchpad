@@ -5,10 +5,11 @@ import { CXO_SYSTEM_PROMPTS, CXO_MODELS, type CXORole } from './cxo'
 const TOKEN_COSTS = {
   'claude-haiku-4-5-20251001': { input: 1.00, output: 5.00 },
   'claude-sonnet-4-6': { input: 3.00, output: 15.00 },
+  'claude-opus-4-6': { input: 15.00, output: 75.00 },
 } as const
 
-// 最低予算: CXO 4名 (haiku) + CEO (sonnet) の概算上限
-const MIN_BUDGET_USD = 0.05
+// 最低予算: CXO 4名 (sonnet) + CEO (opus) の概算上限
+const MIN_BUDGET_USD = 0.10
 
 export interface CouncilResult {
   sessionId: string
@@ -29,8 +30,9 @@ interface CXOReport {
   tokensOut: number
 }
 
-function calcCost(model: keyof typeof TOKEN_COSTS, tokensIn: number, tokensOut: number): number {
-  const costs = TOKEN_COSTS[model]
+function calcCost(model: string, tokensIn: number, tokensOut: number): number {
+  const costs = TOKEN_COSTS[model as keyof typeof TOKEN_COSTS]
+  if (!costs) throw new Error(`Unknown model: ${model}`)
   return (tokensIn / 1_000_000 * costs.input) + (tokensOut / 1_000_000 * costs.output)
 }
 

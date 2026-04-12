@@ -16,12 +16,15 @@ export default async function DashboardPage() {
     { data: subscription },
   ] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
-    supabase.from('startups').select('id, name, status, pivot_count, created_at').eq('user_id', user.id).order('created_at'),
+    supabase.from('startups').select('id, name, status, pivot_count, business_type, experiment_count, created_at').eq('user_id', user.id).order('created_at'),
     supabase.from('token_budgets').select('*').eq('user_id', user.id).single(),
     supabase.from('subscriptions').select('*').eq('user_id', user.id).single(),
   ])
 
   if (!subscription) redirect('/pricing')
+
+  // オンボーディング未完了ならリダイレクト
+  if (!profile?.onboarding_complete) redirect('/dashboard/onboarding')
 
   const startupList = startups ?? []
   const earliestStartup = startupList[0]
@@ -61,12 +64,12 @@ export default async function DashboardPage() {
           </div>
 
           <div className="md:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6">
-            <h2 className="text-sm font-medium text-gray-400 mb-4">ピボット進捗</h2>
+            <h2 className="text-sm font-medium text-gray-400 mb-4">実験進捗</h2>
             <PivotCounter
               startups={startupList.map((s) => ({
                 id: s.id,
                 name: s.name,
-                pivotCount: s.pivot_count,
+                pivotCount: s.experiment_count ?? s.pivot_count,
               }))}
               startDate={earliestStartup?.created_at ?? new Date().toISOString()}
             />
@@ -112,8 +115,11 @@ export default async function DashboardPage() {
                         {startup.status}
                       </span>
                     </div>
+                    {startup.business_type && (
+                      <p className="text-xs text-purple-400 mb-1">{startup.business_type.replace('_', ' ')}</p>
+                    )}
                     <div className="text-sm text-gray-400">
-                      ピボット: {startup.pivot_count}
+                      実験: {startup.experiment_count ?? startup.pivot_count}/10
                     </div>
                   </div>
                 </Link>
