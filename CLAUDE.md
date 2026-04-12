@@ -239,4 +239,29 @@ Agentツールで以下のサブエージェントを起動して委任する：
 - リサーチ Agent (Haiku) = データ収集
 - 予算の80%到達で警告、100%で停止
 
+## 長期記憶システム
+
+### セッション開始時に読むもの（自動）
+1. `memory/MEMORY.md` — curated長期記憶（重要な決定・教訓）
+2. `memory/YYYY-MM-DD.md` — 今日＋昨日の日次ノート
+3. `CLAUDE.md` + `AGENTS.md` — システム指示
+
+### hooks (自動実行)
+- **SessionStart**: 前回の記憶を読み込み
+- **Stop**: セッション内容を日次ノートに保存
+- **PreCompact**: コンパクション前に状態を退避
+- **PreToolUse (Bash)**: git commit時のシークレット検知
+- **PostToolUse (Agent)**: Agent呼び出しのコスト追跡
+
+### 夜間統合 (cron 17:00 UTC / 2:00 JST)
+`scripts/nightly-consolidation.js` が自動実行:
+1. 今日の日次ノートから重要情報をHaikuで抽出
+2. `memory/MEMORY.md` に追記
+3. 7日以上古い日次ノートを `memory/archive/` に移動
+
+### 記憶の書き方ルール
+- セッション中に重要な決定をしたら `memory/MEMORY.md` に直接追記してもよい
+- 日次ノートは自動生成。手動編集不要
+- `memory/archive/` は読み取り専用（必要時のみ参照）
+
 @AGENTS.md
