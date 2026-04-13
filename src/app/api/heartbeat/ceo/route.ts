@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/client'
+import { sendReport } from '@/lib/notify'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
@@ -70,6 +71,14 @@ ${context}
     task_type: 'pivot_analysis',
     result: content,
   })
+
+  // メール通知
+  const hour = new Date().getUTCHours()
+  const period = hour < 6 ? '朝' : '夕方'
+  await sendReport(
+    `📊 Launchpad ${period}レポート — ${new Date().toLocaleDateString('ja-JP')}`,
+    content
+  )
 
   return NextResponse.json({
     ok: true,
