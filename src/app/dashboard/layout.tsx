@@ -15,12 +15,13 @@ const projectLinks = [
   { href: 'https://robo-co-op.github.io/puzzle-games/', label: 'Puzzle Games', color: '#22c55e' },
 ]
 
-const agents = [
-  { label: 'CEO', model: 'Opus', color: '#f59e0b' },
+const ceo = { label: 'CEO', model: 'Opus', color: '#f59e0b' }
+
+const cxoAgents = [
   { label: 'CTO', model: 'Sonnet', color: '#3b82f6' },
   { label: 'CMO', model: 'Sonnet', color: '#ec4899' },
   { label: 'COO', model: 'Sonnet', color: '#f97316' },
-  { label: 'CFO', model: 'Haiku', color: '#22c55e' },
+  { label: 'CFO', model: 'Sonnet', color: '#22c55e' },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -103,11 +104,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
 
-          {/* Agents */}
+          {/* CEO */}
           <div>
-            <p className="text-[10px] text-zinc-600 font-semibold px-2 mb-2 uppercase tracking-[0.1em]">Agents</p>
+            <p className="text-[10px] text-zinc-600 font-semibold px-2 mb-2 uppercase tracking-[0.1em]">CEO</p>
             <div className="space-y-0.5">
-              {agents.map((agent) => (
+              <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] text-zinc-500">
+                <div
+                  className="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-bold text-white/90"
+                  style={{ backgroundColor: ceo.color + '20', color: ceo.color }}
+                >
+                  {ceo.label[0]}
+                </div>
+                <span>{ceo.label}</span>
+                <span className="text-[10px] text-zinc-700 ml-auto font-mono">{ceo.model}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* CxO Team */}
+          <div>
+            <p className="text-[10px] text-zinc-600 font-semibold px-2 mb-2 uppercase tracking-[0.1em]">CxO Team</p>
+            <div className="space-y-0.5">
+              {cxoAgents.map((agent) => (
                 <div
                   key={agent.label}
                   className="flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] text-zinc-500"
