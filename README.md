@@ -55,12 +55,43 @@ $500/month runs 3 businesses in parallel.
 | CXOs (execution) | Sonnet | $200/mo |
 | Research | Haiku | $70/mo |
 
-## Manual setup
+## Setup (your own instance)
+
+### 1. Fork & clone
 
 ```bash
-git clone https://github.com/Robo-Co-op/launchpad.git my-startup
-cd my-startup
-claude
+# Fork on GitHub first, then:
+git clone https://github.com/YOUR_USERNAME/launchpad.git
+cd launchpad
+npm install
+```
+
+### 2. Supabase
+
+1. Create a free project at [supabase.com](https://supabase.com)
+2. Go to **SQL Editor** → paste contents of `supabase/schema.sql` → **Run**
+3. Go to **Settings > API** → copy Project URL, anon key, service role key
+
+### 3. Environment
+
+```bash
+cp .env.example .env.local
+# Edit .env.local with your Supabase keys and Anthropic API key
+```
+
+### 4. Deploy to Vercel
+
+```bash
+npx vercel          # Link to your Vercel project
+npx vercel env add  # Add each key from .env.local
+npx vercel --prod   # Deploy
+```
+
+### 5. Start
+
+```bash
+claude   # in the project directory
+# AI will guide you through onboarding
 ```
 
 ## License

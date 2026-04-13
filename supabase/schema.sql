@@ -51,6 +51,7 @@ create table agent_runs (
   tokens_output int,
   cost_usd numeric(10,6),
   task_type text,
+  result text,
   created_at timestamptz default now()
 );
 
