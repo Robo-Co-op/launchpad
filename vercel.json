@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/heartbeat/ceo",
-      "schedule": "0 0,9 * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/heartbeat/cxo",
-      "schedule": "0 3,12 * * *"
+      "schedule": "0 12 * * *"
     }
   ]
 }
