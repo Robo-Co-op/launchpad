@@ -1,6 +1,9 @@
 // Email notification utility (Resend API)
 const RESEND_API_KEY = process.env.RESEND_API_KEY
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'jintkim@roboco-op.org'
+const NOTIFY_EMAILS = (process.env.NOTIFY_EMAIL || 'jintkim@roboco-op.org')
+  .split(',')
+  .map(e => e.trim())
+  .filter(Boolean)
 
 export async function sendReport(subject: string, body: string) {
   if (!RESEND_API_KEY) {
@@ -24,7 +27,7 @@ export async function sendReport(subject: string, body: string) {
     },
     body: JSON.stringify({
       from: 'Launchpad CEO <onboarding@resend.dev>',
-      to: [NOTIFY_EMAIL],
+      to: NOTIFY_EMAILS,
       subject,
       html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #e0e0e0; border-radius: 12px;">
         <div style="border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 16px;">
