@@ -80,12 +80,24 @@ export default async function DashboardPage() {
           <p className="text-[11px] text-zinc-600 mt-0.5">Autonomous operations of 3 businesses</p>
         </div>
         <div className="flex items-center gap-3 text-[11px] text-zinc-600">
-          <span className="flex items-center gap-1.5">
+          <Link href="/dashboard/heartbeats" className="flex items-center gap-1.5 hover:text-zinc-300 transition-colors">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-dot" />
-            System Active
-          </span>
+            Next heartbeat: {(() => {
+              const now = new Date()
+              const ceoNext = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0))
+              if (ceoNext <= now) ceoNext.setUTCDate(ceoNext.getUTCDate() + 1)
+              const cxoNext = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0, 0))
+              if (cxoNext <= now) cxoNext.setUTCDate(cxoNext.getUTCDate() + 1)
+              const next = ceoNext < cxoNext ? ceoNext : cxoNext
+              const who = ceoNext < cxoNext ? 'CEO' : 'CxO'
+              const mins = Math.floor((next.getTime() - now.getTime()) / 60000)
+              const h = Math.floor(mins / 60)
+              const m = mins % 60
+              return `${who} in ${h}h ${m}m`
+            })()}
+          </Link>
           <span className="text-zinc-700">|</span>
-          <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}</span>
+          <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} UTC</span>
         </div>
       </div>
 
@@ -215,57 +227,76 @@ export default async function DashboardPage() {
 
         {/* Bottom: Experiment Tracker + Activity */}
         <div className="grid md:grid-cols-5 gap-3">
-          {/* Experiment Tracker */}
+          {/* Experiment Tracker – 実際の実験数ベースで可視化 */}
           <div className="md:col-span-3 card p-5">
             <div className="flex items-center justify-between mb-4">
               <p className="text-[11px] text-zinc-500 font-semibold uppercase tracking-[0.08em]">Experiment Tracker</p>
-              <span className="text-[11px] text-zinc-600 font-mono">{successExps} / 30</span>
+              <span className="text-[11px] text-zinc-600 font-mono">
+                {runningExps} running · {successExps} done · {experiments.length} total
+              </span>
             </div>
-            {/* 30-grid layout */}
-            <div className="grid grid-cols-10 gap-1.5 mb-4">
-              {Array.from({ length: 30 }).map((_, i) => {
-                const exp = experiments[i]
-                return (
-                  <div
-                    key={i}
-                    title={exp ? `#${i + 1}: ${exp.hypothesis?.slice(0, 50)}` : `Experiment #${i + 1}`}
-                    className={`aspect-square rounded-[3px] transition-all duration-300 ${
-                      exp?.status === 'success' ? 'bg-green-500/80 shadow-sm shadow-green-500/20' :
-                      exp?.status === 'running' ? 'bg-purple-500/80 shadow-sm shadow-purple-500/20 animate-pulse' :
-                      exp?.status === 'failed' ? 'bg-red-500/40' :
-                      'bg-zinc-800/60'
-                    }`}
-                  />
-                )
-              })}
-            </div>
-            {/* Legend */}
-            <div className="flex gap-4 text-[10px] text-zinc-600 mb-3">
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-purple-500/80" />Running</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-green-500/80" />Success</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-red-500/40" />Failed</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-zinc-800/60" />Pending</span>
-            </div>
-            {/* Business Progress */}
+            {/* 実験リスト（空状態は non-misleading） */}
+            {experiments.length === 0 ? (
+              <div className="border border-dashed border-[#1c1c22] rounded-md py-8 flex flex-col items-center gap-1.5">
+                <p className="text-[11px] text-zinc-600">No experiments yet</p>
+                <p className="text-[10px] text-zinc-700">CXO team will propose hypotheses during next heartbeat</p>
+              </div>
+            ) : (
+              <div className="space-y-1.5 mb-3">
+                {experiments.map((exp: any) => {
+                  const sName = exp.startup_id ? startupNames[exp.startup_id] : null
+                  const statusColor =
+                    exp.status === 'success' ? '#22c55e' :
+                    exp.status === 'running' ? '#a855f7' :
+                    exp.status === 'failed' ? '#ef4444' :
+                    '#6b7280'
+                  return (
+                    <Link
+                      key={exp.id}
+                      href={exp.startup_id ? `/dashboard/startups/${exp.startup_id}` : '#'}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md border border-[#1c1c22] hover:border-[#27272a] hover:bg-zinc-900/30 transition-colors group"
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${exp.status === 'running' ? 'animate-pulse-dot' : ''}`}
+                        style={{ backgroundColor: statusColor }}
+                      />
+                      <span className="text-[11px] text-zinc-300 line-clamp-1 flex-1 group-hover:text-white transition-colors">
+                        {exp.hypothesis}
+                      </span>
+                      {sName && (
+                        <span className="text-[10px] text-zinc-600 shrink-0 truncate max-w-[80px]">{sName}</span>
+                      )}
+                      <span
+                        className="text-[9px] px-1.5 py-0.5 rounded font-mono uppercase shrink-0"
+                        style={{ backgroundColor: statusColor + '20', color: statusColor }}
+                      >
+                        {exp.status}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+            {/* Business progress summary */}
             <div className="space-y-2 border-t border-[#1c1c22] pt-3">
               {startups.map((s: any) => {
                 const exps = experiments.filter((e: any) => e.startup_id === s.id)
                 const done = exps.filter((e: any) => e.status === 'success').length
                 const running = exps.filter((e: any) => e.status === 'running').length
+                const total = exps.length || 1
+                const donePct = (done / total) * 100
+                const runningPct = (running / total) * 100
                 return (
                   <div key={s.id} className="flex items-center gap-3 text-[11px]">
-                    <span className="text-zinc-500 w-24 truncate shrink-0">{s.name}</span>
-                    <div className="flex gap-[3px] flex-1">
-                      {Array.from({ length: 10 }).map((_, i) => (
-                        <div key={i} className={`h-[6px] flex-1 rounded-sm transition-all ${
-                          exps[i]?.status === 'success' ? 'bg-green-500/70' :
-                          exps[i]?.status === 'running' ? 'bg-purple-500/70' :
-                          'bg-zinc-800/50'
-                        }`} />
-                      ))}
+                    <Link href={`/dashboard/startups/${s.id}`} className="text-zinc-400 hover:text-zinc-200 w-24 truncate shrink-0 transition-colors">
+                      {s.name}
+                    </Link>
+                    <div className="flex-1 h-[6px] bg-zinc-800/50 rounded-sm overflow-hidden flex">
+                      <div className="bg-green-500/70 h-full transition-all" style={{ width: `${donePct}%` }} />
+                      <div className="bg-purple-500/70 h-full transition-all" style={{ width: `${runningPct}%` }} />
                     </div>
                     <span className="text-zinc-700 w-14 text-right font-mono text-[10px]">
-                      {running > 0 ? <span className="text-purple-400">{running} run</span> : done > 0 ? <span className="text-green-400">{done} done</span> : '0/10'}
+                      {running > 0 ? <span className="text-purple-400">{running} run</span> : done > 0 ? <span className="text-green-400">{done} done</span> : `0/${exps.length}`}
                     </span>
                   </div>
                 )
