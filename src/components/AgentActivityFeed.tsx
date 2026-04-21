@@ -1,16 +1,11 @@
-const AGENT_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-  'claude-opus-4-6': { label: 'CEO', color: '#f59e0b', icon: 'C' },
-  'claude-sonnet-4-6': { label: 'CXO', color: '#a855f7', icon: 'S' },
-  'claude-haiku-4-5-20251001': { label: 'Research', color: '#06b6d4', icon: 'R' },
-}
-
-const TASK_LABELS: Record<string, string> = {
-  pivot_analysis: 'Pivot Analysis',
-  market_research: 'Market Research',
-  mvp_spec: 'MVP Specification',
-  pivot_decision: 'Pivot Decision',
-  budget_review: 'Budget Review',
-  ops_review: 'Operations Review',
+// task_typeごとに役職を分離する（model単位だとSonnet勢がまとまってしまう）
+const TASK_AGENT: Record<string, { label: string; color: string; taskLabel: string }> = {
+  pivot_analysis: { label: 'CEO', color: '#f59e0b', taskLabel: 'Pivot Analysis' },
+  mvp_spec: { label: 'CTO', color: '#3b82f6', taskLabel: 'MVP Specification' },
+  market_research: { label: 'CMO', color: '#ec4899', taskLabel: 'Market Research' },
+  ops_review: { label: 'COO', color: '#f97316', taskLabel: 'Operations Review' },
+  budget_review: { label: 'CFO', color: '#22c55e', taskLabel: 'Budget Review' },
+  pivot_decision: { label: 'CEO', color: '#f59e0b', taskLabel: 'Pivot Decision' },
 }
 
 interface AgentRun {
@@ -58,7 +53,12 @@ export default function AgentActivityFeed({ runs, startupNames }: AgentActivityF
       <h3 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em] mb-4">Activity</h3>
       <div className="space-y-0.5 flex-1 overflow-y-auto">
         {runs.map((run, i) => {
-          const agent = run.model ? AGENT_CONFIG[run.model] ?? { label: 'Agent', color: '#71717a', icon: 'A' } : { label: 'Agent', color: '#71717a', icon: 'A' }
+          const mapped = run.task_type ? TASK_AGENT[run.task_type] : undefined
+          const agent = mapped ?? {
+            label: 'Agent',
+            color: '#71717a',
+            taskLabel: run.task_type?.replace(/_/g, ' ') ?? 'Task',
+          }
           return (
             <div
               key={run.id}
@@ -86,7 +86,7 @@ export default function AgentActivityFeed({ runs, startupNames }: AgentActivityF
                     {agent.label}
                   </span>
                   <span className="text-[10px] text-zinc-600">
-                    {run.task_type ? (TASK_LABELS[run.task_type] ?? run.task_type.replace(/_/g, ' ')) : 'Task'}
+                    {agent.taskLabel}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">

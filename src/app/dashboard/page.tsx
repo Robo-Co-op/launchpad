@@ -8,31 +8,52 @@ import AgentActivityFeed from '@/components/AgentActivityFeed'
 async function getDashboardData() {
   try {
     const supabase = createServiceClient()
-    const [startupsRes, experimentsRes, runsRes, budgetRes] = await Promise.all([
+    // 実費はagent_runsテーブルを直接集計する（token_budgetsは未同期のため信用しない）
+    const [startupsRes, experimentsRes, runsRes, allRunsRes, budgetRes] = await Promise.all([
       supabase.from('startups').select('id, name, status, business_type, experiment_count, pivot_count, created_at').order('created_at'),
       supabase.from('experiments').select('id, startup_id, hypothesis, metric, target_value, status, result, started_at, completed_at').order('created_at'),
       supabase.from('agent_runs').select('id, startup_id, model, task_type, cost_usd, created_at').order('created_at', { ascending: false }).limit(20),
-      supabase.from('token_budgets').select('*').limit(1).single(),
+      supabase.from('agent_runs').select('cost_usd, created_at'),
+      supabase.from('token_budgets').select('*').limit(1).maybeSingle(),
     ])
+
+    // 月初からの合計で当月支出を計算
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const allRuns = allRunsRes.data ?? []
+    const monthSpend = allRuns
+      .filter((r: any) => r.created_at >= monthStart)
+      .reduce((sum: number, r: any) => sum + Number(r.cost_usd || 0), 0)
+    const totalSpend = allRuns
+      .reduce((sum: number, r: any) => sum + Number(r.cost_usd || 0), 0)
+    const budgetTotal = Number(budgetRes.data?.total_usd ?? 500)
+
     return {
       startups: startupsRes.data ?? [],
       experiments: experimentsRes.data ?? [],
       recentRuns: runsRes.data ?? [],
-      budget: budgetRes.data ?? null,
+      monthSpend,
+      totalSpend,
+      budgetTotal,
+      totalRuns: allRuns.length,
     }
   } catch {
-    return { startups: [], experiments: [], recentRuns: [], budget: null }
+    return { startups: [], experiments: [], recentRuns: [], monthSpend: 0, totalSpend: 0, budgetTotal: 500, totalRuns: 0 }
   }
 }
 
-const AGENT_ROLES: Record<string, { label: string; color: string; icon: string }> = {
-  'claude-opus-4-6': { label: 'CEO', color: '#f59e0b', icon: 'C' },
-  'claude-sonnet-4-6': { label: 'CXO', color: '#a855f7', icon: 'S' },
-  'claude-haiku-4-5-20251001': { label: 'Research', color: '#06b6d4', icon: 'R' },
+// task_type ベースでCXO役職を特定する（modelだけだとSonnet勢が全員同じラベルになる）
+const TASK_AGENTS: Record<string, { label: string; color: string; role: string; taskLabel: string }> = {
+  pivot_analysis: { label: 'CEO', color: '#f59e0b', role: 'ceo', taskLabel: 'Pivot Analysis' },
+  mvp_spec: { label: 'CTO', color: '#3b82f6', role: 'cto', taskLabel: 'MVP Specification' },
+  market_research: { label: 'CMO', color: '#ec4899', role: 'cmo', taskLabel: 'Market Research' },
+  ops_review: { label: 'COO', color: '#f97316', role: 'coo', taskLabel: 'Operations Review' },
+  budget_review: { label: 'CFO', color: '#22c55e', role: 'cfo', taskLabel: 'Budget Review' },
+  pivot_decision: { label: 'CEO', color: '#f59e0b', role: 'ceo', taskLabel: 'Pivot Decision' },
 }
 
 export default async function DashboardPage() {
-  const { startups, experiments, recentRuns, budget } = await getDashboardData()
+  const { startups, experiments, recentRuns, monthSpend, totalSpend, budgetTotal, totalRuns } = await getDashboardData()
 
   const startupNames: Record<string, string> = Object.fromEntries(
     startups.map((s: any) => [s.id, s.name])
@@ -41,9 +62,7 @@ export default async function DashboardPage() {
   const runningExps = experiments.filter((e: any) => e.status === 'running').length
   const successExps = experiments.filter((e: any) => e.status === 'success').length
   const failedExps = experiments.filter((e: any) => e.status === 'failed').length
-  const totalCost = Number(budget?.spent_usd ?? 0)
-  const budgetTotal = Number(budget?.total_usd ?? 500)
-  const budgetPct = Math.min(100, Math.round((totalCost / budgetTotal) * 100))
+  const budgetPct = Math.min(100, Math.round((monthSpend / budgetTotal) * 100))
   const earliestDate = startups[0]?.created_at
   const daysSinceStart = earliestDate
     ? Math.floor((Date.now() - new Date(earliestDate).getTime()) / 86400000)
@@ -82,15 +101,15 @@ export default async function DashboardPage() {
             detail={successExps > 0 ? `${successExps} success` : undefined}
           />
           <KPICard
-            label="Tasks"
-            value={recentRuns.length.toString()}
-            sub={failedExps > 0 ? `${failedExps} failed` : 'all good'}
+            label="Agent Runs"
+            value={totalRuns.toString()}
+            sub={failedExps > 0 ? `${failedExps} failed exp` : 'all good'}
             color="blue"
           />
           <KPICard
             label="Month Spend"
-            value={`$${totalCost.toFixed(2)}`}
-            sub={`${budgetPct}% of $${budgetTotal}`}
+            value={`$${monthSpend.toFixed(2)}`}
+            sub={`${budgetPct}% of $${budgetTotal} · $${totalSpend.toFixed(2)} total`}
             color="purple"
             progress={budgetPct}
           />
@@ -108,32 +127,45 @@ export default async function DashboardPage() {
           {recentAgentWork.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {recentAgentWork.map((run: any, i: number) => {
-                const agent = AGENT_ROLES[run.model] ?? { label: 'Agent', color: '#71717a', icon: 'A' }
+                const mapped = run.task_type ? TASK_AGENTS[run.task_type] : undefined
+                const agent = mapped ?? {
+                  label: 'Agent',
+                  color: '#71717a',
+                  role: '',
+                  taskLabel: run.task_type?.replace(/_/g, ' ') ?? 'Task',
+                }
+                const startupName = run.startup_id ? startupNames[run.startup_id] : null
                 return (
-                  <div
+                  <Link
                     key={run.id}
-                    className="card p-3.5 animate-fade-in"
+                    href={agent.role ? `/dashboard/agents/${agent.role}` : '#'}
+                    className="card p-3.5 animate-fade-in hover:border-[#27272a] transition-colors group"
                     style={{ animationDelay: `${i * 50}ms` }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div
                           className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold"
-                          style={{ backgroundColor: agent.color + '18', color: agent.color }}
+                          style={{ backgroundColor: agent.color + '20', color: agent.color }}
                         >
-                          {agent.icon}
+                          {agent.label}
                         </div>
-                        <span className="text-[12px] font-medium text-zinc-300">{agent.label}</span>
+                        <span className="text-[12px] font-medium text-zinc-300 group-hover:text-white transition-colors">
+                          {agent.label}
+                        </span>
                       </div>
                       <span className="text-[10px] text-zinc-700 font-mono">
                         {new Date(run.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-500 leading-relaxed">{run.task_type?.replace(/_/g, ' ') ?? 'Task execution'}</p>
+                    <p className="text-[11px] text-zinc-400 leading-relaxed">{agent.taskLabel}</p>
+                    {startupName && (
+                      <p className="text-[10px] text-zinc-600 mt-0.5 truncate">· {startupName}</p>
+                    )}
                     {run.cost_usd > 0 && (
                       <p className="text-[10px] text-zinc-700 mt-1 font-mono">${Number(run.cost_usd).toFixed(4)}</p>
                     )}
-                  </div>
+                  </Link>
                 )
               })}
             </div>
