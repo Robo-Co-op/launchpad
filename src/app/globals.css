@@ -105,3 +105,64 @@ body {
 .status-done { background: #3b82f6; }
 .status-idle { background: #52525b; }
 .status-review { background: #f59e0b; }
+
+/* CRT レトロテーマ（toggle で body に .theme-crt を付ける） */
+.theme-crt {
+  font-family: var(--font-geist-mono), 'IBM Plex Mono', 'Courier New', monospace !important;
+}
+.theme-crt::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(168, 85, 247, 0.04) 2px,
+    rgba(168, 85, 247, 0.04) 3px
+  );
+}
+.theme-crt::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 51;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  mix-blend-mode: multiply;
+}
+.theme-crt .card {
+  border-color: rgba(168, 85, 247, 0.3) !important;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.1), inset 0 0 1px rgba(168, 85, 247, 0.2);
+}
+.theme-crt .card:hover {
+  border-color: rgba(168, 85, 247, 0.6) !important;
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.25), inset 0 0 2px rgba(168, 85, 247, 0.3);
+}
+.theme-crt h1,
+.theme-crt h2,
+.theme-crt h3 {
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+  letter-spacing: 0.04em;
+}
+.theme-crt aside {
+  border-right-color: rgba(168, 85, 247, 0.4) !important;
+}
+
+/* スキャンラインフリッカー */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+  52% { opacity: 0.95; }
+  54% { opacity: 1; }
+}
+.theme-crt body,
+.theme-crt > * {
+  animation: flicker 0.15s infinite;
+}

@@ -2,6 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/client'
+import HeartbeatHeatmap from '@/components/HeartbeatHeatmap'
+import WaterfallTrace from '@/components/WaterfallTrace'
 
 // vercel.jsonのcron設定に合わせたスケジュール（UTC）
 const SCHEDULES: {
@@ -130,6 +132,21 @@ export default async function HeartbeatsPage() {
       </div>
 
       <div className="flex-1 px-6 py-5 space-y-4">
+        {/* 30日ヒートマップ */}
+        <HeartbeatHeatmap runs={runs} days={30} />
+
+        {/* Waterfall Trace（過去24h） */}
+        {(() => {
+          const dayAgo = Date.now() - 24 * 3600 * 1000
+          const recent = runs.filter(
+            (r: any) => new Date(r.created_at).getTime() >= dayAgo
+          )
+          return recent.length > 0 ? (
+            <WaterfallTrace runs={recent} referenceEnd={Date.now()} />
+          ) : null
+        })()}
+
+
         {SCHEDULES.map((s, i) => {
           const agentRuns = runs.filter((r: any) => r.task_type === s.taskType)
           const lastRun = agentRuns[0]

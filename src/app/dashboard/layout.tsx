@@ -2,12 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const overviewItems = [
   { href: '/dashboard', label: 'Dashboard', icon: DashboardIcon, exact: true },
+  { href: '/dashboard/inbox', label: 'Inbox', icon: InboxIcon, badge: 'new' },
   { href: '/dashboard/activity', label: 'Live Activity', icon: ActivityIcon, live: true },
   { href: '/dashboard/heartbeats', label: 'Heartbeats', icon: HeartbeatIcon },
+  { href: '/dashboard/agents', label: 'Agents', icon: AgentsIcon },
   { href: '/dashboard/startups', label: 'Startups', icon: StartupsIcon, badge: '3' },
+  { href: '/dashboard/artifacts', label: 'Artifacts', icon: ArtifactsIcon },
   { href: '/dashboard/budget', label: 'Budget', icon: BudgetIcon },
 ]
 
@@ -142,11 +146,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-[#1c1c22]">
+        <div className="px-4 py-3 border-t border-[#1c1c22] space-y-2">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse-dot" />
             <span className="text-[11px] text-zinc-600">CXO Team Active</span>
           </div>
+          <ThemeToggle />
         </div>
       </aside>
 
@@ -229,6 +234,38 @@ function HeartbeatIcon({ active }: { active: boolean }) {
   return (
     <svg className={`w-4 h-4 ${active ? 'text-purple-400' : 'text-zinc-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h3l3-9 6 18 3-9h3" />
+    </svg>
+  )
+}
+
+function InboxIcon({ active }: { active: boolean }) {
+  return (
+    <svg className={`w-4 h-4 ${active ? 'text-purple-400' : 'text-zinc-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.5V6a2 2 0 00-2-2H5a2 2 0 00-2 2v7.5M21 13.5l-4 4H7l-4-4M21 13.5V18a2 2 0 01-2 2H5a2 2 0 01-2-2v-4.5" />
+    </svg>
+  )
+}
+
+function AgentsIcon({ active }: { active: boolean }) {
+  return (
+    <svg className={`w-4 h-4 ${active ? 'text-purple-400' : 'text-zinc-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <circle cx="12" cy="12" r="3" />
+      <circle cx="5" cy="5" r="2" />
+      <circle cx="19" cy="5" r="2" />
+      <circle cx="5" cy="19" r="2" />
+      <circle cx="19" cy="19" r="2" />
+      <path d="M7 6.5L10 10M17 6.5L14 10M7 17.5L10 14M17 17.5L14 14" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function ArtifactsIcon({ active }: { active: boolean }) {
+  return (
+    <svg className={`w-4 h-4 ${active ? 'text-purple-400' : 'text-zinc-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
     </svg>
   )
 }

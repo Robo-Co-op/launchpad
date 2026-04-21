@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/client'
 import StartupCard from '@/components/StartupCard'
 import AgentActivityFeed from '@/components/AgentActivityFeed'
+import BurnDownGauge from '@/components/BurnDownGauge'
+import CostSankey from '@/components/CostSankey'
 
 async function getDashboardData() {
   try {
@@ -13,7 +15,7 @@ async function getDashboardData() {
       supabase.from('startups').select('id, name, status, business_type, experiment_count, pivot_count, created_at').order('created_at'),
       supabase.from('experiments').select('id, startup_id, hypothesis, metric, target_value, status, result, started_at, completed_at').order('created_at'),
       supabase.from('agent_runs').select('id, startup_id, model, task_type, cost_usd, created_at').order('created_at', { ascending: false }).limit(20),
-      supabase.from('agent_runs').select('cost_usd, created_at'),
+      supabase.from('agent_runs').select('task_type, startup_id, cost_usd, created_at'),
       supabase.from('token_budgets').select('*').limit(1).maybeSingle(),
     ])
 
@@ -32,13 +34,14 @@ async function getDashboardData() {
       startups: startupsRes.data ?? [],
       experiments: experimentsRes.data ?? [],
       recentRuns: runsRes.data ?? [],
+      allRuns,
       monthSpend,
       totalSpend,
       budgetTotal,
       totalRuns: allRuns.length,
     }
   } catch {
-    return { startups: [], experiments: [], recentRuns: [], monthSpend: 0, totalSpend: 0, budgetTotal: 500, totalRuns: 0 }
+    return { startups: [], experiments: [], recentRuns: [], allRuns: [], monthSpend: 0, totalSpend: 0, budgetTotal: 500, totalRuns: 0 }
   }
 }
 
@@ -53,7 +56,7 @@ const TASK_AGENTS: Record<string, { label: string; color: string; role: string; 
 }
 
 export default async function DashboardPage() {
-  const { startups, experiments, recentRuns, monthSpend, totalSpend, budgetTotal, totalRuns } = await getDashboardData()
+  const { startups, experiments, recentRuns, allRuns, monthSpend, totalSpend, budgetTotal, totalRuns } = await getDashboardData()
 
   const startupNames: Record<string, string> = Object.fromEntries(
     startups.map((s: any) => [s.id, s.name])
@@ -131,6 +134,25 @@ export default async function DashboardPage() {
             sub={`Day ${daysSinceStart} of 30`}
             color={daysLeft <= 7 ? 'red' : 'orange'}
           />
+        </div>
+
+        {/* Burn-Down Gauge + Cost Sankey */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div>
+            <BurnDownGauge
+              spent={monthSpend}
+              budget={budgetTotal}
+              dayOfMonth={new Date().getUTCDate()}
+              daysInMonth={new Date(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 0).getUTCDate()}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <CostSankey
+              runs={allRuns}
+              startupNames={startupNames}
+              height={220}
+            />
+          </div>
         </div>
 
         {/* Agent Work */}
